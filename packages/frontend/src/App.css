@@ -5,6 +5,11 @@
   padding: 20px;
 }
 
+:root {
+  --priority-selected: #07F2E6;
+  --priority-unselected: #7A7A7A;
+}
+
 .App-header {
   background-color: #282c34;
   padding: 20px;
@@ -56,6 +61,27 @@ button {
 
 button:hover {
   background-color: #21a1c9;
+}
+
+/* Priority button styles (radio-like) */
+.priority-button {
+  min-width: 36px;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 4px;
+  background: var(--priority-unselected);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+.priority-button.selected {
+  background: var(--priority-selected);
+  color: #000;
+}
+.priority-button:hover {
+  filter: brightness(0.95);
 }
 
 ul {
