@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  List, ListItem, ListItemText, IconButton, Checkbox, Typography, Box, CircularProgress, Paper, Chip
+  List, ListItem, ListItemText, IconButton, Checkbox, Typography, Box, CircularProgress, Paper, Chip, Button
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -61,6 +61,25 @@ function TaskList({ onEdit }) {
       fetchTasks();
     } catch (err) {
       setError('Failed to delete task');
+    }
+  };
+
+  const handleSetPriority = async (task, newPriority) => {
+    try {
+      const payload = {
+        title: task.title,
+        description: task.description || '',
+        due_date: task.due_date || null,
+        priority: newPriority
+      };
+      await fetch(`/api/tasks/${task.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      fetchTasks();
+    } catch (err) {
+      setError('Failed to update priority');
     }
   };
 
@@ -203,19 +222,35 @@ function TaskList({ onEdit }) {
                 gap: 1
               }}
             >
-                {task.priority && (
-                  <Chip
-                    label={task.priority}
-                    size="small"
-                    sx={{
-                      height: 20,
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                      background: task.priority === 'P1' ? '#f44336' : task.priority === 'P2' ? '#ff9800' : '#9e9e9e',
-                      color: 'white'
-                    }}
-                  />
-                )}
+                <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                  {['P1', 'P2', 'P3'].map(p => {
+                    const selected = task.priority === p;
+                    return (
+                      <Button
+                        key={p}
+                        size="small"
+                        variant="contained"
+                        onClick={() => handleSetPriority(task, p)}
+                        aria-pressed={selected}
+                        sx={{
+                          minWidth: 36,
+                          height: 28,
+                          px: 1,
+                          py: 0,
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          background: selected ? '#07F2E6' : '#7A7A7A',
+                          color: selected ? '#000' : '#fff',
+                          '&:hover': {
+                            background: selected ? '#07F2E6' : '#6f6f6f'
+                          }
+                        }}
+                      >
+                        {p}
+                      </Button>
+                    );
+                  })}
+                </Box>
                 {task.due_date && (
                   <Chip
                     icon={<EventIcon sx={{ fontSize: 14 }} />}
