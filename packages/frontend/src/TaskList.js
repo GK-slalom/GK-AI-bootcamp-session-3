@@ -203,23 +203,36 @@ function TaskList({ onEdit }) {
                 gap: 1
               }}
             >
-              {task.due_date && (
-                <Chip
-                  icon={<EventIcon sx={{ fontSize: 14 }} />}
-                  label={formatDueDate(task.due_date)}
-                  size="small"
-                  sx={{
-                    height: 20,
-                    fontSize: '0.7rem',
-                    fontWeight: 500,
-                    background: 'linear-gradient(135deg, #ff9800 0%, #ff6f00 100%)',
-                    color: 'white',
-                    '& .MuiChip-icon': {
+                {task.priority && (
+                  <Chip
+                    label={task.priority}
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      background: task.priority === 'P1' ? '#f44336' : task.priority === 'P2' ? '#ff9800' : '#9e9e9e',
                       color: 'white'
-                    }
-                  }}
-                />
-              )}
+                    }}
+                  />
+                )}
+                {task.due_date && (
+                  <Chip
+                    icon={<EventIcon sx={{ fontSize: 14 }} />}
+                    label={formatDueDate(task.due_date)}
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontSize: '0.7rem',
+                      fontWeight: 500,
+                      background: 'linear-gradient(135deg, #ff9800 0%, #ff6f00 100%)',
+                      color: 'white',
+                      '& .MuiChip-icon': {
+                        color: 'white'
+                      }
+                    }}
+                  />
+                )}
               <Box 
                 sx={{ 
                   display: 'flex', 
