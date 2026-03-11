@@ -1,0 +1,60 @@
+- Epic: Due Date
+  - Story: Add optional dueDate field to tasks
+    - Acceptance: Tasks can be created and saved with an optional `dueDate` in `YYYY-MM-DD` format.
+    - Technical: Add/confirm `due_date` handling in the frontend storage layer; use `packages/frontend/src/TaskForm.js`'s existing date input and `normalizeDateString()` when saving.
+  - Story: Validate and normalize dueDate (YYYY-MM-DD)
+    - Acceptance: Inputs matching ISO `YYYY-MM-DD` are accepted and normalized; invalid formats are rejected or ignored.
+    - Technical: Use `normalizeDateString()` in `packages/frontend/src/TaskForm.js` and centralize validation in a new `packages/frontend/src/storage.js` helper that normalizes/validates before persist.
+  - Story: Ignore invalid dueDate values
+    - Acceptance: Invalid `dueDate` values are treated as absent (no due date) and do not cause errors.
+    - Technical: Ensure `storage.js` treats invalid dates as `null` and that `TaskList` rendering (`packages/frontend/src/TaskList.js`) handles missing `due_date`.
+- Epic: Priority Levels
+  - Story: Add priority enum (P1, P2, P3) to tasks
+    - Acceptance: Tasks store a `priority` value limited to `P1`, `P2`, or `P3`.
+    - Technical: Add a `priority` field to the frontend task model. Update `packages/frontend/src/TaskForm.js` to include a select input for `P1|P2|P3`; persist `priority` via the `storage` abstraction.
+  - Story: Set default priority to P3
+    - Acceptance: When no priority is provided, new tasks default to `P3`.
+    - Technical: Default `priority` to `P3` in `TaskForm` and in `storage.js` when creating tasks.
+  - Story: Validate priority values
+    - Acceptance: Invalid or missing priority values default to `P3`; only `P1|P2|P3` are persisted.
+    - Technical: Implement simple enum validation in `storage.js` and ensure `TaskList` and any display logic expect `P1|P2|P3`.
+- Epic: Date Filters
+  - Story: Add All / Today / Overdue filter tabs
+    - Acceptance: UI shows `All`, `Today`, and `Overdue` tabs and switching filters the task list.
+    - Technical: Implement filter UI (tabs or buttons) in `packages/frontend/src/App.js` or a new `FilterBar` component; `TaskList` should accept filter props and apply them to the client-side task array loaded from `storage.js`.
+  - Story: Filter Today to show only tasks due today
+    - Acceptance: `Today` shows only incomplete tasks whose `dueDate` equals the current date.
+    - Technical: Compute `today` using local timezone in `TaskList` filter logic; compare normalized `YYYY-MM-DD` strings to avoid timezone issues (see `TaskForm` normalization).
+  - Story: Filter Overdue to show only overdue tasks
+    - Acceptance: `Overdue` shows only incomplete tasks with `dueDate` earlier than the current date.
+    - Technical: Implement overdue check in `TaskList` using normalized dates; ensure completed tasks are excluded per acceptance criteria.
+  - Story: Ensure All shows completed and incomplete tasks
+    - Acceptance: `All` displays both completed and incomplete tasks regardless of due date.
+    - Technical: `TaskList`'s `All` filter must bypass completed/due-date filtering and render the full client-side task list from `storage.js`.
+- Epic: Local Storage
+  - Story: Persist tasks locally (no backend changes)
+    - Acceptance: Tasks are persisted across page reloads using local storage; no backend calls are made.
+    - Technical: Implement a `packages/frontend/src/storage.js` module that exposes `getTasks()`, `saveTask(task)`, `updateTask(id,task)`, `deleteTask(id)`, and `toggleComplete(id)` backed by `window.localStorage`. Replace fetch calls in `packages/frontend/src/TaskList.js` and `packages/frontend/src/App.js` with calls to this storage abstraction.
+  - Story: Load tasks from local storage on startup
+    - Acceptance: On app startup, tasks are loaded from local storage if present and rendered correctly.
+    - Technical: Update `packages/frontend/src/TaskList.js` to call `storage.getTasks()` in `useEffect()` instead of `fetch('/api/tasks')`. Ensure `App.js` uses the storage API when saving/updating tasks and triggers `TaskList` refresh.
+
+- Epic: Overdue Highlighting (Post-MVP)
+  - Story: Visually highlight overdue tasks
+    - Acceptance: Overdue tasks are styled distinctly (e.g., red highlight) so they are visually distinguishable.
+    - Technical: Add conditional styling in `packages/frontend/src/TaskList.js` to apply an overdue CSS style when a task `due_date` < today and `completed` is false. Use existing MUI `sx` props for styling.
+- Epic: Sorting Rules (Post-MVP)
+  - Story: Sort overdue tasks first
+    - Acceptance: Task list places overdue tasks before non-overdue tasks.
+    - Technical: Implement client-side sort in `TaskList` (or `storage.js`) that orders tasks by: overdue flag desc, `priority` (P1→P3), `due_date` asc, then undated tasks last; provide a single comparator function to keep logic consistent.
+  - Story: Sort by priority P1→P3 within groups
+    - Acceptance: Within the same due-status group, tasks are ordered by priority `P1` then `P2` then `P3`.
+    - Technical: Map priorities to numeric weights (e.g., P1=1, P2=2, P3=3) in the comparator and use when ordering.
+  - Story: Sort by due date ascending
+    - Acceptance: Tasks with due dates are ordered from earliest to latest when priority and overdue status are equal.
+    - Technical: Ensure comparator parses `due_date` as `YYYY-MM-DD` and compares lexicographically or as Date objects created from normalized strings to order ascending.
+  - Story: Place undated tasks last
+    - Acceptance: Tasks without a `dueDate` appear after all dated tasks.
+    - Technical: In comparator, treat `due_date === null` (or empty string) as greater than any real date so undated tasks sort last.
+
+Notes on backend: the repository contains a backend at `packages/backend/src` that currently implements an in-memory SQLite API (`/api/tasks`). Per the PRD requirement to keep storage local-only, the frontend technical requirements above specify replacing calls to `/api/tasks` with a `localStorage`-backed `storage.js`. If instead the team prefers to use the backend, additional backend changes are required: add a `priority` column to the `tasks` table and update create/update endpoints to accept `priority` (this is intentionally NOT required for MVP under current PRD).
